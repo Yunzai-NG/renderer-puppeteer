@@ -1,0 +1,65 @@
+{
+  "name": "@yunzai-ng/renderer-puppeteer",
+  "version": "0.1.0",
+  "description": "puppeteer 渲染器：art-template 编译 + Chromium 截图，兼容旧 Yunzai HTML 模板",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "author": "Yunzai-NG",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "yunzai": {
+    "name": "renderer-puppeteer"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yunzai-NG/renderer-puppeteer.git"
+  },
+  "homepage": "https://github.com/Yunzai-NG/renderer-puppeteer",
+  "bugs": {
+    "url": "https://github.com/Yunzai-NG/renderer-puppeteer/issues"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc -b",
+    "build:clean": "tsc -b --clean",
+    "link:framework": "node scripts/link-framework.mjs",
+    "typecheck:test": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "verify": "pnpm run build && pnpm run typecheck:test && pnpm run lint && pnpm run test"
+  },
+  "peerDependencies": {
+    "@yunzai-ng/core": "^0.1.0",
+    "@yunzai-ng/types": "^0.1.0"
+  },
+  "dependencies": {
+    "art-template": "4.13.2",
+    "puppeteer-core": "24.10.2"
+  },
+  "optionalDependencies": {
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "eslint": "^9.18.0",
+    "eslint-plugin-jsdoc": "^50.6.1",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}
