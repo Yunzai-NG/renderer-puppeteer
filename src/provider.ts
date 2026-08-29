@@ -51,7 +51,9 @@ export function createProvider(deps: ProviderDeps): RendererProvider {
       const prepared = await deps.engine.prepare(req, {
         keepHtml: cfg.keepHtml,
         scale: 1,
-        tailwind: cfg.tailwind,
+        // 发起方的声明优先：模板用不用工具类是它自己的事，渲染器无从判断一段 HTML 里的
+        // `class` 是 Tailwind 的还是模板自定义的。未声明时才退到本插件的配置
+        tailwind: req.tailwind ?? cfg.tailwind,
         tailwindEntry: cfg.tailwindEntry
       })
       try {

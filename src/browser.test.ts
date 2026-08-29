@@ -128,7 +128,7 @@ function rig(): Rig {
 /** 一份合法的启动参数 */
 const SPEC: LaunchSpec = {
   executablePath: "/usr/bin/chromium",
-  headless: true,
+  headless: "shell",
   args: ["--no-sandbox"],
   userDataDir: "/tmp/yzng-profile",
   timeout: 30_000

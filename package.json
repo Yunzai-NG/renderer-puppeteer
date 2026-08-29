@@ -1,8 +1,9 @@
 {
   "name": "@yunzai-ng/renderer-puppeteer",
   "version": "0.1.0",
-  "description": "puppeteer 渲染器：art-template 编译 + Chromium 截图，兼容旧 Yunzai HTML 模板",
+  "description": "puppeteer 渲染器：art-template 编译 + 无头 Chromium 截图，兼容旧 Yunzai HTML 模板",
   "type": "module",
+  "private": true,
   "license": "AGPL-3.0-or-later",
   "author": "Yunzai-NG",
   "main": "./dist/index.js",
@@ -15,7 +16,9 @@
     "./package.json": "./package.json"
   },
   "yunzai": {
-    "name": "renderer-puppeteer"
+    "name": "renderer-puppeteer",
+    "entry": "dist/index.js",
+    "browserBuildId": "137.0.7151.119"
   },
   "repository": {
     "type": "git",
@@ -29,11 +32,12 @@
     "node": ">=20.11.0"
   },
   "packageManager": "pnpm@9.15.4",
-  "files": ["dist", "src"],
   "scripts": {
     "build": "tsc -b",
     "build:clean": "tsc -b --clean",
     "link:framework": "node scripts/link-framework.mjs",
+    "install:browser": "node scripts/install-browser.mjs",
+    "check:browser": "node scripts/install-browser.mjs --check",
     "typecheck:test": "tsc -p tsconfig.test.json",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -46,6 +50,7 @@
     "@yunzai-ng/types": "^0.1.0"
   },
   "dependencies": {
+    "@puppeteer/browsers": "2.10.5",
     "art-template": "4.13.2",
     "puppeteer-core": "24.10.2"
   },

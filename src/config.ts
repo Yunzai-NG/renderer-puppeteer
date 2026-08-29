@@ -5,9 +5,12 @@
  * 注意事项：**该 schema 即面板上的"渲染器设置"表单**，无任何一行前端代码为其单独编写。
  *
  *          字段分为两类，其分界十分重要：
- *          - **启动类**（`chromiumPath` / `wsEndpoint` / `headless` / `args` / `userDataDir`）
+ *          - **启动类**（`chromiumPath` / `wsEndpoint` / `args` / `userDataDir`）
  *            变更后须重启浏览器方可生效，`LAUNCH_KEYS` 列出该组字段，插件入口据此在
  *            配置变更时回收浏览器。
+ *
+ *          此处没有"无头模式"开关：下载的是 `chrome-headless-shell`，它只能无头运行，
+ *          给出一个必然失败的开关比不给更坏。
  *          - **渲染类**（超时、页高、并发等）于每次渲染时即时读取，变更后立即生效。
  */
 import { s } from "@yunzai-ng/core"
@@ -22,9 +25,12 @@ export const CONFIG_SCHEMA = s.object({
   chromiumPath: s
     .file()
     .default("")
-    .title("Chromium 可执行文件")
-    .desc("留空时自动探测（Windows 上将探测 Edge 与 Chrome）。探测失败时于此填写绝对路径")
-    .placeholder("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe")
+    .title("浏览器可执行文件")
+    .desc(
+      "留空时使用 pnpm run install:browser 下载的固定版本。不探测系统上的 Edge 与 Chrome：" +
+        "其版本随机器漂移，出图差异无从复现"
+    )
+    .placeholder("留空即可，仅在需要指定自备浏览器时填写")
     .group("浏览器")
     .order(1),
 
@@ -36,14 +42,6 @@ export const CONFIG_SCHEMA = s.object({
     .placeholder("ws://127.0.0.1:9222/devtools/browser/xxxx")
     .group("浏览器")
     .order(2),
-
-  headless: s
-    .boolean()
-    .default(true)
-    .title("无头模式")
-    .desc("关闭后将显示真实浏览器窗口，仅在排查渲染结果异常时需要")
-    .group("浏览器")
-    .order(3),
 
   args: s
     .tags()
@@ -147,9 +145,15 @@ export const CONFIG_SCHEMA = s.object({
 
   tailwind: s
     .boolean()
-    .default(true)
-    .title("编译 Tailwind 工具类")
-    .desc("仅作用于 TSX 模板；旧 HTML 模板一律不受影响。未安装 tailwindcss 时自动跳过，不影响出图")
+    .default(false)
+    .title("未声明的插件也编译 Tailwind 工具类")
+    .desc(
+      "缺省关闭：用不用工具类由插件在 defineTemplate() 的第三参里声明，未声明即不编译，" +
+        "于是它既不必装 tailwindcss，也不会看到与它无关的编译告警。" +
+        "开启此项会让**所有**未声明的 TSX 模板都尝试编译一次 —— 仅在你自己写模板、" +
+        "又不想逐个声明时才需要。插件已声明时一律以插件的声明为准，此项不参与。" +
+        "旧 HTML 模板任何情况下都不受影响"
+    )
     .group("渲染")
     .order(16),
 
@@ -175,10 +179,4 @@ export type RendererConfigView = DeepReadonly<RendererConfig>
  * 用于 `ctx.config.onChange`：仅当上述键发生变更时才回收浏览器，超时之类字段的变更
  * 不应导致正在运行的浏览器重启。
  */
-export const LAUNCH_KEYS: readonly (keyof RendererConfig)[] = [
-  "chromiumPath",
-  "wsEndpoint",
-  "headless",
-  "args",
-  "userDataDir"
-]
+export const LAUNCH_KEYS: readonly (keyof RendererConfig)[] = ["chromiumPath", "wsEndpoint", "args", "userDataDir"]

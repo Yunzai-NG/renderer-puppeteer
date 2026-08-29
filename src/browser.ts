@@ -143,8 +143,13 @@ export interface BrowserLike {
 export interface LaunchSpec {
   /** 可执行文件绝对路径 */
   executablePath: string
-  /** 无头模式 */
-  headless: boolean
+  /**
+   * 无头实现
+   *
+   * `"shell"` 对应 `chrome-headless-shell`（本插件下载的构建），`true` 对应完整 chrome 的新式无头。
+   * 两者不可互换：向 shell 传 `true` 会使 puppeteer 附加它不认识的 `--headless=new`。
+   */
+  headless: true | "shell"
   /** 启动参数 */
   args: readonly string[]
   /** 用户数据目录 */

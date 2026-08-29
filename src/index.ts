@@ -67,7 +67,7 @@ export default definePlugin({
         launch: found
           ? {
               executablePath: found.path,
-              headless: cfg.headless,
+              headless: found.headless,
               args: buildArgs(platform, cfg.args),
               userDataDir,
               timeout: parseDuration(cfg.launchTimeout, 60_000)

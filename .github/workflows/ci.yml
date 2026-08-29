@@ -12,10 +12,10 @@
 # 另外覆盖 registry：仓库内 `.npmrc` 指向 npmmirror（国内网络环境），
 # 而 GitHub 的 runner 位于境外，走官方源更快且更稳。
 #
-# **runner 上没有 Chromium，也不需要有。** 依赖是 `puppeteer-core`，其不附带浏览器
-# （见 src/chromium.ts 的说明），故 install 不会下载任何浏览器。三个测试文件覆盖的是
-# 页面池调度、参数拼装与截图选项改写，均不启动进程 —— `browser.ts` 与 `screenshot.ts`
-# 刻意不 import puppeteer，可测性正是该设计的收益。真机出图由 shoot.mjs 手动验证。
+# **runner 上不下载浏览器。** 下载由 `pnpm run install:browser` 显式触发，未挂在
+# postinstall 上（见 scripts/install-browser.mjs），故 install 不会拉取那 100MB。
+# 四个测试文件覆盖的是浏览器探测、页面池调度、参数拼装与截图选项改写，均不启动进程 ——
+# `browser.ts` 与 `screenshot.ts` 刻意不 import puppeteer，可测性正是该设计的收益。
 name: CI
 
 on:

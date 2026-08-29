@@ -17,13 +17,35 @@ git clone https://github.com/Yunzai-NG/renderer-puppeteer.git
 cd renderer-puppeteer
 pnpm install
 pnpm run build
+pnpm run install:browser
 ```
 
-## Chromium
+## 浏览器
 
-本插件使用 `puppeteer-core`，**不自带 Chromium**。探测顺序为「配置中明确指定 → 环境变量
-（`YZNG_CHROMIUM_PATH`、`PUPPETEER_EXECUTABLE_PATH`、`CHROME_PATH`、`CHROMIUM_PATH`）→
-系统浏览器 → puppeteer 的下载缓存」，来源越明确者优先，不作猜测式回落。
+本插件使用 `puppeteer-core`，需另行下载一份无头浏览器：
+
+```powershell
+pnpm run install:browser   # 约 100MB，装到主目录的 cache/puppeteer 下
+pnpm run check:browser     # 只查看是否已装，不下载
+```
+
+下载的是 `chrome-headless-shell`（Chrome for Testing 的无头构建），体积不到完整 Chrome 的
+一半。**不探测系统上的 Edge 与 Chrome**：系统浏览器的版本随机器漂移，而 `puppeteer-core`
+只与一个固定构建配套，用系统浏览器出图时「某台机器上少一块背景」这类问题无从复现。构建号记在
+`package.json` 的 `yunzai.browserBuildId`。
+
+国内网络可先设镜像：
+
+```powershell
+$env:YZNG_CHROMIUM_MIRROR = "https://cdn.npmmirror.com/binaries/chrome-for-testing"
+pnpm run install:browser
+```
+
+探测顺序为「配置中明确指定 → 环境变量（`YZNG_CHROMIUM_PATH`、`PUPPETEER_EXECUTABLE_PATH`、
+`CHROME_PATH`、`CHROMIUM_PATH`）→ 已下载的固定构建 → 缓存中的其他构建」，来源越明确者优先。
+
+**Linux ARM64 与 Termux 例外**：Chrome for Testing 不发布这两个平台的构建，需自行用包管理器
+安装（`apt install chromium` / `pkg install chromium`），本插件会自动使用系统的那一份。
 
 未探测到时本插件向内核报告不可用，内核回落至下一个渲染器；**缺少渲染器不会导致启动失败**，
 仅调用 `ctx.render` 的命令会告知用户渲染不可用。
