@@ -46,8 +46,8 @@
     "verify": "pnpm run build && pnpm run typecheck:test && pnpm run lint && pnpm run test"
   },
   "peerDependencies": {
-    "@yunzai-ng/core": ">=0.1.0",
-    "@yunzai-ng/types": ">=0.1.0"
+    "@yunzai-ng/core": ">=0.2.0",
+    "@yunzai-ng/types": ">=0.2.0"
   },
   "dependencies": {
     "@puppeteer/browsers": "2.10.5",

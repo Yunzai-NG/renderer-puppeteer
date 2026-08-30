@@ -7,9 +7,11 @@ HTML 模板写法。
 
 ## 安装
 
-推荐经面板的插件市场安装：面板 → 插件市场 → 搜索 `renderer-puppeteer` → 安装。
+推荐经面板的插件市场安装：面板 → 插件市场 → 搜索 `renderer-puppeteer` → 安装。**三步都由内核代跑** ——
+索引里声明了 `setup.scripts: ["build", "install:browser"]`，故装依赖、编译、下载无头浏览器一并完成，
+装完即可用。那份浏览器约 100MB，确认框会把要跑的步骤逐个列出来。
 
-亦可手工克隆至主目录的 `plugins/` 下：
+亦可手工克隆至主目录的 `plugins/` 下，那时三步都要自己来：
 
 ```powershell
 cd <主目录>\plugins
