@@ -1,6 +1,6 @@
 {
   "name": "@yunzai-ng/renderer-puppeteer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "puppeteer 渲染器：art-template 编译 + 无头 Chromium 截图，兼容旧 Yunzai HTML 模板",
   "type": "module",
   "private": true,
