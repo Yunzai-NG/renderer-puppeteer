@@ -10,13 +10,14 @@
  *          设备上冷启动 Chromium 需数十秒。浏览器由首次渲染按需启动。
  */
 import { definePlugin, parseDuration } from "@yunzai-ng/core"
+import type { PluginDefinition } from "@yunzai-ng/types"
 import { join } from "node:path"
 import { BrowserPool } from "./browser.js"
 import type { PoolPlan } from "./browser.js"
 import { buildArgs, findChromium, missingChromiumHint } from "./chromium.js"
 import type { ChromiumFound } from "./chromium.js"
 import { CONFIG_SCHEMA, LAUNCH_KEYS } from "./config.js"
-import type { RendererConfigView } from "./config.js"
+import type { RendererConfig, RendererConfigView } from "./config.js"
 import { createLauncher } from "./launcher.js"
 import { RENDERER_ID, createProvider } from "./provider.js"
 import { TemplateEngine } from "./template.js"
@@ -25,7 +26,15 @@ export { CONFIG_SCHEMA, LAUNCH_KEYS } from "./config.js"
 export type { RendererConfig, RendererConfigView, WaitUntil } from "./config.js"
 export { RENDERER_ID } from "./provider.js"
 
-export default definePlugin({
+/**
+ * 插件定义
+ *
+ * 显式标注类型而非直接 `export default definePlugin(...)`：返回类型 `PluginDefinition` 声明在
+ * `@yunzai-ng/types` 内，而插件构建于使用者主目录时，该包的真实路径落在宿主的
+ * `node_modules/.pnpm/` 之下 —— tsc 生成 .d.ts 时无从以可移植的方式指称它，报 TS2742。
+ * 标注后 .d.ts 直接写下这个名字，与宿主的安装布局无关。
+ */
+const plugin: PluginDefinition<RendererConfig> = definePlugin({
   name: "renderer-puppeteer",
   version: "0.1.0",
   description: "puppeteer 渲染器：art-template 编译旧 Yunzai HTML 模板，Chromium 截图输出图片",
@@ -110,3 +119,5 @@ export default definePlugin({
     }
   }
 })
+
+export default plugin
