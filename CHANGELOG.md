@@ -2,6 +2,32 @@
 
 格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## 0.3.0 — 2026-09-14
+
+> **BREAKING CHANGE**：要求 `core >=0.6.0`（用到了那一版新增的 `s.object().deprecated()`）。
+
+### 修复
+
+- **启动时不再为一个从未存在过的配置项 `headless` 报「无法识别的配置项」。**
+
+  本插件的 schema 里从来没有这个键，理由写在 `config.ts`：下载的是 `chrome-headless-shell`，
+  它只能无头运行，给一个必然失败的开关比不给更坏。但早期手写过配置的实例，yaml 里留着那一行，
+  于是每次启动都要看一句告警 —— 而内核对未知键的处置（warn 并原样保留）本身是对的，它照顾的是
+  拼错的键与来自暂时卸载的插件的键。
+
+  现在用 core 0.6.0 的 `deprecated("headless")` 把它登记为废弃键：静默丢弃，既不告警也不落盘。
+  使用者不必手工去删那一行。
+
+### 变更
+
+- **peer 抬到 `core >=0.6.0`。** `deprecated()` 在更早的内核上不存在，而 schema 是模块加载期
+  构造的 —— 装在老内核上会直接 TypeError，表现为插件压根装不上，而错误信息指向 `config.ts`。
+- 删掉 `browser.ts`、`chromium.ts`、`tailwind.ts`、`template.ts` 文件头里重复论证同一判据的段落。
+  保留判据本身：构建号必须与 puppeteer-core 同步、`ownRequire` 的解析起点必须是渲染器自身、
+  ARM64 与 Termux 回落系统 chromium 的例外。
+
+100 条用例，无变化。
+
 ## 0.2.0 — 2026-08-30
 
 > **BREAKING CHANGE**：不再兼容 `@yunzai-ng/types` 0.1.x。

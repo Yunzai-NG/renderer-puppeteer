@@ -2,18 +2,13 @@
  * 模块职责：art-template 编译层 —— 将模板与数据转换为可被浏览器打开的 HTML 文件
  * 依赖方向：依赖 `@yunzai-ng/core` 的公开入口（LRU、文件工具）与 art-template
  * 生命周期：随插件实例存活；`clear()` 由插件卸载时调用，编译缓存与临时文件一并释放
- * 注意事项：**编译缓存是有界 LRU 加读取时比对 mtime**，不为每个模板注册 watcher —— 后者只增不减，
- *          既泄漏又占句柄。模板变更后下一次渲染自动重新编译。
- *
- *          **子模板也进缓存。** 不传 filename 而关掉 art-template 的缓存，会让 `include` / `extend`
- *          的每一层在每次渲染时都重新读盘与解析；故启用它自身的缓存开关，并把它那份无上限的全局
- *          `caches` 换成本模块的 LRU —— 取到缓存收益而不引入内存问题。
- *
- *          **临时 HTML 缺省渲染完即删。** 按 uid 逐人写文件再配一个「保留三天」的清理器，实际是只增
- *          不减；启用 `keepHtml` 时才保留，且那时用固定文件名反复覆盖，天然有界。
- *
- *          注入 `<base href="file:///<模板所在目录>/">`：模板里写 `href="./style.css"` 最自然，而中间
- *          HTML 在临时目录，缺 base 必然 404。靠相对层级计算规避的话，模板目录一挪就白屏。
+ * 注意事项：四处设计 ——
+ *          1) 编译缓存是有界 LRU 加读取时比对 mtime，不为每个模板注册 watcher（只增不减，既泄漏又占句柄）
+ *          2) 子模板也进缓存：关掉 art-template 的缓存会让 `include` / `extend` 每层每次都重新读盘与解析，
+ *             故启用它自身的缓存开关，并把它那份无上限的全局 `caches` 换成本模块的 LRU
+ *          3) 临时 HTML 缺省渲染完即删；`keepHtml` 时才保留，且用固定文件名反复覆盖，天然有界
+ *          4) 注入 `<base href="file:///<模板所在目录>/">`：中间 HTML 在临时目录，缺 base 则模板里的
+ *             `./style.css` 必然 404；靠相对层级计算规避的话，模板目录一挪就白屏
  */
 import { basename, dirname, extname as extOf, join, resolve } from "node:path"
 import { statSync } from "node:fs"

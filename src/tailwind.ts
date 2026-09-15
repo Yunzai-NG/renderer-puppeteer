@@ -3,17 +3,14 @@
  * 依赖方向：依赖 `@yunzai-ng/core` 的公开入口（LRU、shortHash）与本插件的 html 工具；
  *          `tailwindcss` 为**运行期可选依赖**，缺失时本模块整体降级为空操作
  * 生命周期：随插件实例存活；`clear()` 由插件卸载时调用
- * 注意事项：**不引入构建步骤。** 常规用法是 CLI 或 PostCSS 在打包期扫描源码，但模板作者写完就该
- *          直接出图。故用 Tailwind v4 的程序化接口，候选类名取自已渲染出的 HTML 本身 —— 比扫描源码
- *          更准，运行期拼出来的类名（条件分支）也在其中。
+ * 注意事项：不引入构建步骤：用 Tailwind v4 的程序化接口，候选类名取自已渲染出的 HTML 本身 ——
+ *          比扫描源码更准，运行期拼出来的类名（条件分支）也在其中。
  *
- *          **`tailwindcss` 作可选依赖，动态 `import()` 加载，缺失时整体降级为空操作。** 渲染器的既有
- *          职责是「art-template + 截图」，为一个可选能力让它在安装失败时整体不可用不划算；失败只告警
- *          一次并继续出图，旧模板不含工具类、毫无影响。
+ *          `tailwindcss` 作可选依赖、动态 `import()` 加载，缺失时整体降级为空操作并只告警一次：
+ *          渲染器的既有职责是「art-template + 截图」，不该因一个可选能力整体不可用。
  *
- *          **编译结果按候选集合缓存。** `build()` 自身是增量的，但每次渲染重新 `compile()` 会重复解析
- *          入口 CSS 与主题。同一模板的候选集合在数据变化时通常完全一致，故以「入口 CSS + 候选集合」
- *          为键缓存产物，命中时不触碰 Tailwind。
+ *          编译结果以「入口 CSS + 候选集合」为键缓存：每次渲染重新 `compile()` 会重复解析入口
+ *          CSS 与主题，而同一模板的候选集合在数据变化时通常完全一致。
  */
 import { createRequire } from "node:module"
 import { existsSync } from "node:fs"
@@ -35,14 +32,10 @@ const DEFAULT_ENTRY = '@import "tailwindcss";'
 /**
  * 以本模块所在位置为起点的 require
  *
- * 用于解析入口 CSS 里的裸包名。**起点必须是渲染器自身而非发起插件的模板目录**：
- * `tailwindcss` 装在渲染器插件的 `node_modules` 下，而 Node 的解析算法沿起点逐级上溯，
- * 从 `plugins/<发起插件>/templates/` 出发只会走到 `plugins/<发起插件>/node_modules`、
- * `plugins/node_modules`、`<主目录>/node_modules`，永远到不了渲染器那一份 ——
- * 表现为每渲染一张图都报一次 `Cannot find module 'tailwindcss'`，而该包其实已装好。
- *
- * 另一重理由是版本一致：编译器是渲染器自己 `import()` 进来的那一份，
- * `@import "tailwindcss"` 取到的 CSS 必须与它同源，否则 v4 的编译器会读到别处的样式表。
+ * 用于解析入口 CSS 里的裸包名。**起点必须是渲染器自身而非发起插件的模板目录**：`tailwindcss`
+ * 装在渲染器插件的 `node_modules` 下，从插件模板目录出发逐级上溯永远到不了那一份，表现为每渲染
+ * 一张图都报一次 `Cannot find module 'tailwindcss'`。另一重理由是版本一致：`@import "tailwindcss"`
+ * 取到的 CSS 必须与渲染器 `import()` 进来的编译器同源。
  */
 const ownRequire = createRequire(import.meta.url)
 

@@ -2,18 +2,16 @@
  * 模块职责：定位由安装脚本下载的无头 Chromium，并给出启动参数
  * 依赖方向：依赖 `@puppeteer/browsers` 的缓存布局与类型包
  * 生命周期：探测结果缓存于调用方（`index.ts`）；本模块无状态
- * 注意事项：**不探测系统上的 Edge / Chrome。** 系统浏览器的版本随使用者的机器任意漂移，
- *          而 `puppeteer-core` 只与 {@link BUILD_ID} 这一个构建配套；用系统 Edge 出图时，
- *          「某台机器上少一块背景、多一道边框」这类问题无从复现。故改由 `scripts/install-browser.mjs`
- *          下载固定版本，路径与 CDP 协议均可预期。
+ * 注意事项：**不探测系统上的 Edge / Chrome**：系统浏览器版本随机器任意漂移，而 `puppeteer-core`
+ *          只与 {@link BUILD_ID} 这一个构建配套 —— 用系统 Edge 出图时「某台机器上少一块背景」
+ *          这类问题无从复现。故由 `scripts/install-browser.mjs` 下载固定版本。
  *
  *          例外是 **Linux ARM64 与 Termux**：Chrome for Testing 不发布 arm64 的 Linux 构建
  *          （`@puppeteer/browsers` 会把 `linux_arm` 映射到 `linux64`，下到的是 x86 二进制），
- *          Android 更是连平台都识别不出。那两处只能回落系统 chromium，否则该类设备直接失去出图能力。
+ *          Android 连平台都识别不出。那两处只能回落系统 chromium，否则该类设备失去出图能力。
  *
- *          探测顺序为「使用者明确指定 → 环境变量 → 已下载的固定版本 → 缓存中的其他版本 →
- *          仅 ARM/Termux 的系统 chromium」，来源越明确则优先级越高。全部采用同步 `existsSync`：
- *          以数次 stat 换取一次启动，异步化并无收益。
+ *          探测顺序：使用者明确指定 → 环境变量 → 已下载的固定版本 → 缓存中的其他版本 →
+ *          仅 ARM/Termux 的系统 chromium。全部用同步 `existsSync`，异步化换不来收益。
  */
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"

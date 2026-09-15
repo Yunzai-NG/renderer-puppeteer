@@ -166,6 +166,9 @@ export const CONFIG_SCHEMA = s.object({
     .group("渲染")
     .order(17)
 })
+  // 0.1.x 的配置里有这一项，而下载的 chrome-headless-shell 只能无头运行；
+  // 登记为废弃键，老配置里残留的那一行才不会每次启动都告警
+  .deprecated("headless")
 
 /** 渲染器配置 */
 export type RendererConfig = Infer<typeof CONFIG_SCHEMA>

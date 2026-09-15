@@ -4,18 +4,13 @@
  * 生命周期：随插件实例创建，`dispose()` 由内核在停机时 await，确保不残留孤儿 Chromium
  * 注意事项：不 import puppeteer 是为了让这段逻辑在没装浏览器的机器上也受测；真实调用收敛在
  *          `launcher.ts`，本模块只依赖结构化接口。四处设计：
- *
- *          **并发闸门在渲染器一侧。** 内核的 `RenderRegistry` 明确不限并发（它无从得知页面池容量），
- *          故此处必须限，否则一条群消息触发数张图就能在 1GB 内存的设备上耗尽 Chromium 可用内存。
- *
- *          **启动是 single-flight。** 用一个 `lock` 布尔量的话，冷启动期间并发到达的渲染会直接失败，
- *          而使用者看到的是「渲染失败」；此处让它们共同等待同一个启动 promise。
- *
- *          **断开后延迟重启。** 在 `disconnected` 里立即重启会让每日只出一张图的实例常驻一个
- *          Chromium 进程；此处只标记为不可用，待下一次实际渲染时再启动。
- *
- *          **区分「自行启动」与「连接接入」。** 靠 `isConnected` 推断会在推断错误时关掉他方的共享
- *          浏览器，故显式记录来源：`external` 只 disconnect，`launch` / `reconnect` 才 close。
+ *          1) 并发闸门必须在渲染器一侧：内核 `RenderRegistry` 不限并发（它不知页面池容量），
+ *             不限则一条群消息触发数张图即可在 1GB 内存的设备上耗尽 Chromium 内存
+ *          2) 启动是 single-flight：用布尔 `lock` 会让冷启动期间并发到达的渲染直接失败
+ *          3) 断开后延迟重启：在 `disconnected` 里立即重启会让每日只出一张图的实例常驻一个
+ *             Chromium 进程，故只标记不可用，待下次实际渲染再启动
+ *          4) 区分「自行启动」与「连接接入」：靠 `isConnected` 推断会误关他方的共享浏览器，
+ *             故显式记来源 —— `external` 只 disconnect，`launch` / `reconnect` 才 close
  */
 import { Semaphore, suggestConcurrency } from "@yunzai-ng/core"
 import type { KvNamespace, Logger } from "@yunzai-ng/types"
