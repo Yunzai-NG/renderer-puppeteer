@@ -2,7 +2,7 @@
 
 格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
-## 未发布
+## 0.3.1 — 2026-10-18
 
 ### 变更
 
