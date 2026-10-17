@@ -35,9 +35,8 @@ export { RENDERER_ID } from "./provider.js"
  * 标注后 .d.ts 直接写下这个名字，与宿主的安装布局无关。
  */
 const plugin: PluginDefinition<RendererConfig> = definePlugin({
+  // 版本与说明取 package.json；name 留着，省掉要内核 0.6.5
   name: "renderer-puppeteer",
-  version: "0.1.0",
-  description: "puppeteer 渲染器：art-template 编译旧 Yunzai HTML 模板，Chromium 截图输出图片",
   configSchema: CONFIG_SCHEMA,
   // 渲染器须在业务插件之前就绪：业务插件的 setup 中即可能存在调用 ctx.render 的定时任务
   priority: 10,

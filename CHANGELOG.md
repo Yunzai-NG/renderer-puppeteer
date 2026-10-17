@@ -2,6 +2,13 @@
 
 格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## 未发布
+
+### 变更
+
+- 入口不再写 `version` 与 `description`，一律取 package.json。此前入口里的版本停在 0.1.0，面板与
+  启动日志显示的都是这个旧号，内核 0.6.5 起还会为此警告。`name` 仍写在入口里：省掉它要内核 0.6.5。
+
 ## 0.3.0 — 2026-09-14
 
 > **BREAKING CHANGE**：要求 `core >=0.6.0`（用到了那一版新增的 `s.object().deprecated()`）。
