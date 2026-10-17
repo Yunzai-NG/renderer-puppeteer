@@ -18,7 +18,7 @@
  *
  * 用法：node scripts/link-framework.mjs
  */
-import { existsSync } from "node:fs"
+import { existsSync, realpathSync } from "node:fs"
 import { lstat, mkdir, rm, symlink } from "node:fs/promises"
 import path from "node:path"
 import process from "node:process"
@@ -65,7 +65,8 @@ await mkdir(scopeDir, { recursive: true })
 
 let linked = 0
 for (const [name, rel] of Object.entries(PACKAGES)) {
-  const target = path.join(framework, rel)
+  // 取盘上的真实大小写：Windows 上 `c:\` 与 `C:\` 两种目标会让 Node 把内核加载成两份
+  const target = realpathSync.native(path.join(framework, rel))
   const link = path.join(scopeDir, name.slice("@yunzai-ng/".length))
 
   // 已存在的真实目录一律不动：那是 pnpm install 装下的正式版本，
