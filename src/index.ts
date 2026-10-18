@@ -1,7 +1,7 @@
 /**
  * 模块职责：插件入口 —— 将 puppeteer 渲染器注册至内核
  * 依赖方向：仅依赖 `@yunzai-ng/core` 的公开入口、`@yunzai-ng/types` 与本插件内部模块
- * 生命周期：`setup` 执行一次；浏览器在首次实际渲染时方启动
+ * 生命周期：`setup` 执行一次；浏览器缺省在首次实际渲染时方启动，开了 `prelaunch` 则在启动完成后于后台启动
  * 注意事项：内核仅依赖 `RendererProvider` 接口，不认识 puppeteer。未安装本插件时框架
  *          照常启动，仅不具备渲染能力，`ctx.render` 明确报出"无可用渲染器" ——
  *          在 Termux 上装不了 Chromium 的使用者据此仍可运行框架。
@@ -95,6 +95,16 @@ const plugin: PluginDefinition<RendererConfig> = definePlugin({
     })
 
     ctx.registerRenderer(createProvider({ engine, pool, config, logger: ctx.logger }))
+
+    /*
+     * 预启动挂在 app/ready 而不是 setup 里
+     *
+     * setup 有超时，且此时别的插件还在加载 —— 冷启动 Chromium 要抢那几秒 CPU。app/ready 之后
+     * 启动已经完成，不 await：浏览器起得再慢也不拖住任何人。
+     */
+    ctx.on("app/ready", () => {
+      if (config().prelaunch) void pool.warm()
+    })
 
     // 可执行文件或启动参数变更须重启浏览器；超时之类的字段变更不应影响正在运行的浏览器
     const launchKeys = new Set<string>(LAUNCH_KEYS)

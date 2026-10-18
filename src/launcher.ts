@@ -26,6 +26,10 @@ function wrapPage(page: Page): PageLike {
       await page.setViewport(viewport)
     },
     goto: async (url, options) => page.goto(url, options),
+    settle: async (idleTime, timeout) => {
+      // 到时仍有请求在飞不算失败：那多半是模板里的长连接，截图照截，与 networkidle2 超时的处置不同
+      await page.waitForNetworkIdle({ idleTime, timeout, concurrency: 0 }).catch(() => undefined)
+    },
     $: async selector => {
       const handle = await page.$(selector)
       if (!handle) return null

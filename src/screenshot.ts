@@ -26,6 +26,16 @@ export const DEFAULT_VIEWPORT = { width: 800, height: 600 } as const
 /** 缺省截图选择器；未命中时回落 `body` */
 export const DEFAULT_SELECTOR = "#container"
 
+/**
+ * `waitUntil: "auto"` 的两个数：load 之后静默多久算就绪、最多再等多久
+ *
+ * `networkidle2` 在本地 file:// 模板上实测每张 2.2 秒，而 `load` 只要 0.2 秒 —— 差的全是空等。
+ * 但只等 `load` 会漏掉脚本在 load 之后才插进来的图片（实测截出 18px 高的空壳），故 load 之后
+ * 再看一眼网络：300ms 内没有新请求即截，有就等它们结束，最多 3 秒。
+ */
+const AUTO_IDLE_MS = 300
+const AUTO_MAX_MS = 3000
+
 /** 生成截图方案时用到的配置缺省值 */
 export interface ShotDefaults {
   /** 分页页高（CSS 像素） */
@@ -46,6 +56,8 @@ export interface ShotPlan {
   viewport: ViewportLike
   /** 跳转参数 */
   goto: GotoOptions
+  /** 跳转之后再等网络静默：`[静默毫秒, 最多毫秒]`；不等时 undefined */
+  settle: readonly [number, number] | undefined
   /** 截图参数（不含 clip，clip 由实际测量结果决定） */
   shot: Omit<ShotOptions, "clip">
   /** 分页页高；不分页时 undefined */
@@ -124,8 +136,9 @@ export function resolveShot(req: RenderRequest, url: string, defaults: ShotDefau
     },
     goto: {
       timeout: positive(req.timeout, defaults.gotoTimeout),
-      waitUntil: defaults.waitUntil
+      waitUntil: defaults.waitUntil === "auto" ? "load" : defaults.waitUntil
     },
+    settle: defaults.waitUntil === "auto" ? [AUTO_IDLE_MS, AUTO_MAX_MS] : undefined,
     shot,
     pageHeight,
     templateScale: 1,
@@ -167,6 +180,7 @@ export function sliceBox(box: BoxLike, pageHeight: number): BoxLike[] {
 export async function shoot(page: PageLike, plan: ShotPlan): Promise<Uint8Array[]> {
   await page.setViewport(plan.viewport)
   await page.goto(plan.url, plan.goto)
+  if (plan.settle !== undefined) await page.settle(...plan.settle)
 
   const target = (await page.$(plan.selector)) ?? (await page.$("body"))
   if (!target) throw new Error(`页面中不存在 ${plan.selector}，且不存在 body，模板输出的可能并非 HTML`)

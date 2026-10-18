@@ -90,6 +90,13 @@ export interface PageLike {
   goto(url: string, options: GotoOptions): Promise<unknown>
 
   /**
+   * 等网络静下来：连续 `idleTime` 毫秒没有进行中的请求即兑现，到 `timeout` 仍未静下来也兑现
+   * @param idleTime 静默多久算静下来
+   * @param timeout 最多等多久
+   */
+  settle(idleTime: number, timeout: number): Promise<void>
+
+  /**
    * 查找元素
    * @param selector CSS 选择器
    * @returns 元素；未命中时 null
@@ -309,6 +316,21 @@ export class BrowserPool {
     if (this.#browser) return true
     const plan = this.#plan()
     return plan.wsEndpoint.trim().length > 0 || plan.launch !== undefined
+  }
+
+  /**
+   * 预先启动浏览器（`prelaunch` 配置项）
+   *
+   * 不占页面许可、不计渲染次数，只把 `#ensure` 提前走一遍；与随后到来的渲染共用同一次启动
+   * （single-flight）。失败只记一条警告：下一次实际渲染照旧会再试一次。
+   */
+  async warm(): Promise<void> {
+    if (this.#stopped || !this.available()) return
+    try {
+      await this.#ensure()
+    } catch (err) {
+      this.#logger.warn(`预先启动浏览器失败，将在首次渲染时再试：${err instanceof Error ? err.message : String(err)}`)
+    }
   }
 
   /**

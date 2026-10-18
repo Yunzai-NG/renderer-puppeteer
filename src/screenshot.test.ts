@@ -37,11 +37,13 @@ function fakePage(elements: Record<string, BoxLike | null>): {
   opened: string[]
   gotos: GotoOptions[]
   viewports: ViewportLike[]
+  settles: [number, number][]
 } {
   const shots: ShotOptions[] = []
   const opened: string[] = []
   const gotos: GotoOptions[] = []
   const viewports: ViewportLike[] = []
+  const settles: [number, number][] = []
   let seq = 0
 
   const page: PageLike = {
@@ -52,6 +54,9 @@ function fakePage(elements: Record<string, BoxLike | null>): {
       opened.push(url)
       gotos.push(options)
       return undefined
+    },
+    settle: async (idleTime, timeout) => {
+      settles.push([idleTime, timeout])
     },
     $: async selector => {
       if (!(selector in elements)) return null
@@ -68,7 +73,7 @@ function fakePage(elements: Record<string, BoxLike | null>): {
     close: async () => undefined
   }
 
-  return { page, shots, opened, gotos, viewports }
+  return { page, shots, opened, gotos, viewports, settles }
 }
 
 describe("resolveShot", () => {
@@ -227,6 +232,21 @@ describe("shoot", () => {
     expect(fake.gotos).toEqual([plan.goto])
     // 不分页时裁剪区域即元素自身的包围盒
     expect(fake.shots[0]?.clip).toEqual({ x: 0, y: 0, width: 800, height: 1200 })
+  })
+
+  it("waitUntil: auto 按 load 打开，再等网络静默 300ms（最多 3 秒）", async () => {
+    const fake = fakePage({ "#container": { x: 0, y: 0, width: 800, height: 600 } })
+    const plan = resolveShot(req(), "file:///a", { ...DEFAULTS, waitUntil: "auto" })
+    await shoot(fake.page, plan)
+    expect(fake.gotos[0]?.waitUntil).toBe("load")
+    expect(fake.settles).toEqual([[300, 3000]])
+  })
+
+  it("显式选了 networkidle2 等就照原样，不再额外等", async () => {
+    const fake = fakePage({ "#container": { x: 0, y: 0, width: 800, height: 600 } })
+    await shoot(fake.page, resolveShot(req(), "file:///a", DEFAULTS))
+    expect(fake.gotos[0]?.waitUntil).toBe("networkidle2")
+    expect(fake.settles).toEqual([])
   })
 
   it("选择器未命中时回落至 body", async () => {

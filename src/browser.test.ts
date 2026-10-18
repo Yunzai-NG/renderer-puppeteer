@@ -40,6 +40,7 @@ function fakePage(): FakePage {
     closed: false,
     setViewport: async () => undefined,
     goto: async () => undefined,
+    settle: async () => undefined,
     $: async () => null,
     screenshot: async () => new Uint8Array(),
     close: async () => {
@@ -184,6 +185,37 @@ describe("BrowserPool", () => {
     expect(await kv.get<string>(ENDPOINT_KEY)).toBe("ws://fake/1")
 
     await pool.dispose()
+  })
+
+  it("warm 预先启动浏览器，之后的渲染直接复用、不算渲染次数", async () => {
+    const pool = make()
+    await pool.warm()
+    expect(r.launched).toHaveLength(1)
+    expect(pool.renders).toBe(0)
+
+    await pool.withPage(async () => undefined)
+    expect(r.launched).toHaveLength(1)
+    await pool.dispose()
+  })
+
+  it("warm 与同时到来的渲染共用一次启动；无可用浏览器时什么都不做", async () => {
+    let open!: () => void
+    r.gate = new Promise<void>(resolve => {
+      open = resolve
+    })
+    const pool = make()
+    const warming = pool.warm()
+    const render = pool.withPage(async () => "x")
+    await flush()
+    open()
+    await warming
+    expect(await render).toBe("x")
+    expect(r.launched).toHaveLength(1)
+    await pool.dispose()
+
+    const none = make({ launch: undefined })
+    await none.warm()
+    expect(r.launched).toHaveLength(1)
   })
 
   it("冷启动期间并发到达的渲染共同等待同一次启动", async () => {

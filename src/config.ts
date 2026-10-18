@@ -17,8 +17,8 @@ import { s } from "@yunzai-ng/core"
 import type { Infer } from "@yunzai-ng/core"
 import type { DeepReadonly } from "@yunzai-ng/types"
 
-/** 页面加载完成的判定时机 */
-export type WaitUntil = "load" | "domcontentloaded" | "networkidle0" | "networkidle2"
+/** 页面加载完成的判定时机；`auto` 见 screenshot.ts 的 `AUTO_IDLE_MS` */
+export type WaitUntil = "auto" | "load" | "domcontentloaded" | "networkidle0" | "networkidle2"
 
 /** 配置 schema */
 export const CONFIG_SCHEMA = s.object({
@@ -67,6 +67,17 @@ export const CONFIG_SCHEMA = s.object({
     .group("浏览器")
     .order(6),
 
+  prelaunch: s
+    .boolean()
+    .default(false)
+    .title("启动完成后预先打开浏览器")
+    .desc(
+      "开启后在框架启动完成后于后台打开浏览器，第一张图不必等冷启动（本机 1.5 秒，低配安卓可达数十秒）。" +
+        "代价是浏览器常驻约 100MB 内存，哪怕一整天都不出图。不影响其他插件的加载"
+    )
+    .group("浏览器")
+    .order(3),
+
   restartAfter: s
     .number()
     .int()
@@ -100,15 +111,20 @@ export const CONFIG_SCHEMA = s.object({
   waitUntil: s
     .select([
       {
+        value: "auto",
+        label: "自动（推荐）",
+        description: "load 之后再等 300ms 内没有新请求，最多 3 秒。本地模板约 0.2 秒出图，脚本晚插的图片也等得到"
+      },
+      {
         value: "networkidle2",
-        label: "网络基本空闲（推荐）",
-        description: "等待 500ms 内连接数不超过 2 个，兼容性最佳"
+        label: "网络基本空闲",
+        description: "等待 500ms 内连接数不超过 2 个。实测本地模板每张要 2 秒以上，0.2.x 及更早的缺省值"
       },
       { value: "networkidle0", label: "网络完全空闲", description: "更为可靠但更慢；模板存在长连接时将持续等待至超时" },
       { value: "load", label: "load 事件", description: "仅等待资源加载完成，不含脚本的后续请求" },
       { value: "domcontentloaded", label: "DOM 就绪", description: "速度最快，但图片可能尚未绘制完成" }
     ])
-    .default("networkidle2")
+    .default("auto")
     .title("页面渲染完成的判定时机")
     .group("渲染")
     .order(12),
